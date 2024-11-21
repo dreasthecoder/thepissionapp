@@ -25,7 +25,13 @@ const ReviewScreen = ({ navigation }: { navigation: any }) => {
 
       {/* Restroom Info */}
       <View style={styles.infoSection}>
-        <Text style={styles.title}>Salesforce Tower Floor 1</Text>
+        <View style={styles.titleRow}>
+          <Image
+            source={require("../../assets/images/toilet.png")} // Add toilet image
+            style={styles.toiletIcon}
+          />
+          <Text style={styles.title}>Salesforce Tower Floor 1</Text>
+        </View>
       </View>
 
       {/* Rating Section */}
@@ -96,6 +102,17 @@ const styles = StyleSheet.create({
   infoSection: {
     alignItems: "center",
     marginBottom: 20,
+  },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center", // Ensure vertical alignment
+    justifyContent: "center",
+    marginTop: 20, // Center horizontally
+  },
+  toiletIcon: {
+    width: 40,
+    height: 40,
+    marginRight: 10, // Add space between the icon and the text
   },
   title: {
     fontSize: 20,
@@ -173,4 +190,7 @@ const styles = StyleSheet.create({
 });
 
 export default ReviewScreen;
+
+
+
 
