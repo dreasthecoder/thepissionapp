@@ -1,10 +1,16 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  FlatList,
+} from "react-native";
 import { createStackNavigator } from "@react-navigation/stack";
 import SanFranciscoScreen from "./sanFrancisco"; // Import from tabs/sanFrancisco
 import SalesforceScreen from "./salesforce";
 import ReviewScreen from "./review";
-
 
 // Define types for the Stack Navigator
 type RootStackParamList = {
@@ -21,7 +27,11 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
   const [activeTab, setActiveTab] = useState("saved");
 
   const savedRestrooms = ["In San Francisco", "In Palo Alto", "At Stanford"];
-  const addedRestrooms = ["Restroom 1 Added", "Restroom 2 Added", "Restroom 3 Added"];
+  const addedRestrooms = [
+    "Restroom 1 Added",
+    "Restroom 2 Added",
+    "Restroom 3 Added",
+  ];
 
   return (
     <View style={styles.container}>
@@ -221,10 +231,3 @@ const styles = StyleSheet.create({
 });
 
 export default ProfileStack;
-
-
-
-
-        
-        
-
