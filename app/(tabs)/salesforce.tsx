@@ -1,5 +1,13 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+  Image,
+  SafeAreaView,
+} from "react-native";
 
 const SalesforceScreen = ({ navigation }: { navigation: any }) => {
   const reviews = [
@@ -32,7 +40,7 @@ const SalesforceScreen = ({ navigation }: { navigation: any }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Back Button */}
       <TouchableOpacity onPress={() => navigation.navigate("SanFrancisco")}>
         <Text style={styles.backButton}>←</Text>
@@ -109,7 +117,7 @@ const SalesforceScreen = ({ navigation }: { navigation: any }) => {
           <Text style={styles.icon}>👤</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -251,6 +259,3 @@ const styles = StyleSheet.create({
 });
 
 export default SalesforceScreen;
-
-
-

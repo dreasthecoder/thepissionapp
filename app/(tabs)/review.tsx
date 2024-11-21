@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   TextInput,
   Image,
+  SafeAreaView,
 } from "react-native";
 
 const ReviewScreen = ({ navigation }: { navigation: any }) => {
@@ -17,7 +18,7 @@ const ReviewScreen = ({ navigation }: { navigation: any }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Back Button */}
       <TouchableOpacity onPress={() => navigation.goBack()}>
         <Text style={styles.backButton}>←</Text>
@@ -84,7 +85,7 @@ const ReviewScreen = ({ navigation }: { navigation: any }) => {
           <Text style={styles.icon}>👤</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -190,7 +191,3 @@ const styles = StyleSheet.create({
 });
 
 export default ReviewScreen;
-
-
-
-

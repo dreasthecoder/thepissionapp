@@ -1,5 +1,13 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+  Image,
+  SafeAreaView,
+} from "react-native";
 
 const SanFranciscoScreen = ({ navigation }: { navigation: any }) => {
   const restrooms = [
@@ -19,7 +27,7 @@ const SanFranciscoScreen = ({ navigation }: { navigation: any }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Header Section */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.navigate("Profile")}>
@@ -91,7 +99,7 @@ const SanFranciscoScreen = ({ navigation }: { navigation: any }) => {
           <Text style={styles.icon}>👤</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -230,5 +238,3 @@ const styles = StyleSheet.create({
 });
 
 export default SanFranciscoScreen;
-
-
