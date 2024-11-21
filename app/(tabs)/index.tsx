@@ -6,6 +6,7 @@ import {
   Image,
   TouchableOpacity,
   FlatList,
+  SafeAreaView,
 } from "react-native";
 import { createStackNavigator } from "@react-navigation/stack";
 import SanFranciscoScreen from "./sanFrancisco"; // Import from tabs/sanFrancisco
@@ -34,7 +35,7 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
   ];
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Profile Header */}
       <View style={styles.header}>
         <TouchableOpacity>
@@ -109,7 +110,7 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
           </TouchableOpacity>
         )}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
