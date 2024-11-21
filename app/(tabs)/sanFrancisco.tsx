@@ -1,5 +1,12 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+  Image,
+} from "react-native";
 
 const SanFranciscoScreen = ({ navigation }: { navigation: any }) => {
   const restrooms = [
@@ -230,5 +237,3 @@ const styles = StyleSheet.create({
 });
 
 export default SanFranciscoScreen;
-
-
