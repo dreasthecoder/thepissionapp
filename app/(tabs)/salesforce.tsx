@@ -21,6 +21,16 @@ const SalesforceScreen = ({ navigation }: { navigation: any }) => {
     },
   ];
 
+  const renderStars = (rating: number) => {
+    return Array(5)
+      .fill(null)
+      .map((_, i) => (
+        <Text key={i} style={[styles.star, i < rating && styles.filledStar]}>
+          ★
+        </Text>
+      ));
+  };
+
   return (
     <View style={styles.container}>
       {/* Back Button */}
@@ -37,9 +47,9 @@ const SalesforceScreen = ({ navigation }: { navigation: any }) => {
           />
           <View style={styles.titleSection}>
             <Text style={styles.title}>Salesforce Floor 1</Text>
-            <Text style={styles.ratingRow}>
-              ★★★★☆ <Text style={styles.reviewCount}>83 reviews</Text>
-            </Text>
+            <View style={styles.ratingRow}>
+              {renderStars(4)} <Text style={styles.reviewCount}>83 reviews</Text>
+            </View>
           </View>
           <View style={styles.icons}>
             <Text style={styles.icon}>🔖</Text>
@@ -69,7 +79,9 @@ const SalesforceScreen = ({ navigation }: { navigation: any }) => {
                 <Text style={styles.reviewerName}>{item.name}</Text>
                 <Text style={styles.reviewTime}>{item.time}</Text>
               </View>
-              <Text style={styles.reviewRating}>{"★".repeat(item.rating)}</Text>
+              <View style={styles.ratingRow}>
+                {renderStars(item.rating)}
+              </View>
               <Text style={styles.reviewText}>{item.comment}</Text>
             </View>
           </View>
@@ -140,13 +152,14 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   ratingRow: {
-    fontSize: 16,
-    color: "gray",
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 5,
   },
   reviewCount: {
     fontSize: 14,
     color: "gray",
+    marginLeft: 10,
   },
   detailsSection: {
     marginBottom: 20,
@@ -193,10 +206,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "gray",
   },
-  reviewRating: {
-    fontSize: 14,
-    marginVertical: 5,
-    color: "#FFD700",
+  star: {
+    fontSize: 16,
+    color: "lightgray", // Default color for stars
+  },
+  filledStar: {
+    color: "#FFD700", // Yellow color for filled stars
   },
   reviewText: {
     fontSize: 14,
