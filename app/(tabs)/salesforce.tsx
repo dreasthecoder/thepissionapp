@@ -31,15 +31,21 @@ const SalesforceScreen = ({ navigation }: { navigation: any }) => {
       {/* Restroom Info */}
       <View style={styles.infoSection}>
         <View style={styles.headerRow}>
-          <Text style={styles.title}>Salesforce Tower Floor 1</Text>
+          <Image
+            source={require("../../assets/images/toilet.png")}
+            style={styles.toiletIcon}
+          />
+          <View style={styles.titleSection}>
+            <Text style={styles.title}>Salesforce Floor 1</Text>
+            <Text style={styles.ratingRow}>
+              ★★★★☆ <Text style={styles.reviewCount}>83 reviews</Text>
+            </Text>
+          </View>
           <View style={styles.icons}>
             <Text style={styles.icon}>🔖</Text>
             <Text style={styles.icon}>🔁</Text>
           </View>
         </View>
-        <Text style={styles.ratingRow}>
-          ★★★★☆ <Text style={styles.reviewCount}>83 reviews</Text>
-        </Text>
       </View>
 
       {/* Details Section */}
@@ -113,6 +119,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+  },
+  toiletIcon: {
+    width: 40,
+    height: 40,
+    marginRight: 10,
+  },
+  titleSection: {
+    flex: 1,
   },
   title: {
     fontSize: 20,
@@ -222,5 +236,6 @@ const styles = StyleSheet.create({
 });
 
 export default SalesforceScreen;
+
 
 
