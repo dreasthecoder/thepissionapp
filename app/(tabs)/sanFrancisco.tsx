@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   FlatList,
   Image,
+  SafeAreaView,
 } from "react-native";
 
 const SanFranciscoScreen = ({ navigation }: { navigation: any }) => {
@@ -26,7 +27,7 @@ const SanFranciscoScreen = ({ navigation }: { navigation: any }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Header Section */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.navigate("Profile")}>
@@ -98,7 +99,7 @@ const SanFranciscoScreen = ({ navigation }: { navigation: any }) => {
           <Text style={styles.icon}>👤</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
