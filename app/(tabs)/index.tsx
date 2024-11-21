@@ -1,11 +1,25 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList } from "react-native";
+import { createStackNavigator } from "@react-navigation/stack";
+import SanFranciscoScreen from "./sanFrancisco"; // Import from tabs/sanFrancisco
+import SalesforceScreen from "./salesforce";
+import ReviewScreen from "./review";
 
-const ProfileScreen = () => {
-  // State for toggle buttons
+
+// Define types for the Stack Navigator
+type RootStackParamList = {
+  Profile: undefined;
+  SanFrancisco: undefined;
+  Salesforce: undefined;
+};
+
+// Create the stack navigator with types
+const Stack = createStackNavigator<RootStackParamList>();
+
+// Profile Screen Component
+const ProfileScreen = ({ navigation }: { navigation: any }) => {
   const [activeTab, setActiveTab] = useState("saved");
 
-  // Sample data for locations
   const savedRestrooms = ["In San Francisco", "In Palo Alto", "At Stanford"];
   const addedRestrooms = ["Restroom 1 Added", "Restroom 2 Added", "Restroom 3 Added"];
 
@@ -22,15 +36,14 @@ const ProfileScreen = () => {
       </View>
 
       {/* Profile Section */}
-<View style={styles.profileSection}>
-  <Image
-    source={require("../../assets/images/james.jpg")} // Updated to load the local image
-    style={styles.profileImage}
-  />
-  <Text style={styles.name}>James Landay</Text>
-  <Text style={styles.location}>Stanford, CA</Text>
-</View>
-
+      <View style={styles.profileSection}>
+        <Image
+          source={require("../../assets/images/james.jpg")}
+          style={styles.profileImage}
+        />
+        <Text style={styles.name}>James Landay</Text>
+        <Text style={styles.location}>Stanford, CA</Text>
+      </View>
 
       {/* Toggle Section */}
       <View style={styles.toggleContainer}>
@@ -73,26 +86,32 @@ const ProfileScreen = () => {
         data={activeTab === "saved" ? savedRestrooms : addedRestrooms}
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.listItem}>
+          <TouchableOpacity
+            style={styles.listItem}
+            onPress={() => {
+              if (item === "In San Francisco") {
+                navigation.navigate("SanFrancisco"); // Navigate to the SanFrancisco screen
+              }
+            }}
+          >
             <Text style={styles.listItemText}>{item}</Text>
             <Text style={styles.arrow}>{">"}</Text>
           </TouchableOpacity>
         )}
       />
-
-      {/* Bottom Tab */}
-      <View style={styles.bottomTab}>
-        <TouchableOpacity>
-          <Text style={[styles.icon, styles.activeIcon]}>🏠</Text>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Text style={styles.icon}>➕</Text>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Text style={styles.icon}>👤</Text>
-        </TouchableOpacity>
-      </View>
     </View>
+  );
+};
+
+// Stack Navigator for Profile and San Francisco
+const ProfileStack = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Salesforce" component={SalesforceScreen} />
+      <Stack.Screen name="Profile" component={ProfileScreen} />
+      <Stack.Screen name="SanFrancisco" component={SanFranciscoScreen} />
+      <Stack.Screen name="Review" component={ReviewScreen} />
+    </Stack.Navigator>
   );
 };
 
@@ -142,28 +161,28 @@ const styles = StyleSheet.create({
   toggleContainer: {
     flexDirection: "row",
     justifyContent: "center",
-    backgroundColor: "#F5F5F5", // Light gray background for the toggle container
-    borderRadius: 20, // Rounded container
-    marginHorizontal: 20, // Add horizontal margin to fit the screen better
-    padding: 5, // Padding to separate the buttons
+    backgroundColor: "#F5F5F5",
+    borderRadius: 20,
+    marginHorizontal: 20,
+    padding: 5,
     marginTop: 20,
   },
   toggleButton: {
     flex: 1,
     alignItems: "center",
     paddingVertical: 10,
-    borderRadius: 15, // Rounded buttons
+    borderRadius: 15,
   },
   activeToggle: {
-    backgroundColor: "#007AFF", // Blue background for active toggle
+    backgroundColor: "#007AFF",
   },
   toggleText: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#000", // Black text for inactive toggle
+    color: "#000",
   },
   activeToggleText: {
-    color: "#FFF", // White text for active toggle
+    color: "#FFF",
   },
   listItem: {
     marginTop: 30,
@@ -174,7 +193,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginVertical: 5,
     borderRadius: 10,
-    // Shadow for iOS
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -182,9 +200,8 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.2,
     shadowRadius: 3,
-    // Shadow for Android
     elevation: 3,
-  },  
+  },
   listItemText: {
     fontSize: 16,
   },
@@ -192,25 +209,20 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "gray",
   },
-  bottomTab: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: 10,
-    backgroundColor: "#f2f2f2",
-    position: "absolute",
-    bottom: 0,
-    width: "100%",
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 10,
   },
-  icon: {
-    fontSize: 20,
+  text: {
+    fontSize: 16,
     color: "gray",
-  },
-  activeIcon: {
-    color: "#007AFF",
   },
 });
 
-export default ProfileScreen;
+export default ProfileStack;
+
+
 
 
         
