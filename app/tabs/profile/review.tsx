@@ -67,16 +67,16 @@ export default function Review() {
       />
 
       {/* Picture Upload */}
-      <TouchableOpacity style={styles.pictureUpload}>
+      {/* <TouchableOpacity style={styles.pictureUpload}>
         <Text style={styles.pictureText}>Picture</Text>
         <Image
           source={require("../../../assets/images/upload-icon.png")} // Replace with your upload icon
           style={styles.uploadIcon}
         />
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
       {/* Add Review Button */}
-      <TouchableOpacity style={styles.addReviewButton}>
+      <TouchableOpacity style={styles.addReviewButton} onPress={() => {}}>
         <Text style={styles.addReviewText}>Add Review</Text>
       </TouchableOpacity>
     </SafeAreaView>
