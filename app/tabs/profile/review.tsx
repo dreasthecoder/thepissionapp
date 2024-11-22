@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useRouter } from "expo-router";
 import {
   View,
   Text,
@@ -9,7 +10,9 @@ import {
   SafeAreaView,
 } from "react-native";
 
-const ReviewScreen = ({ navigation }: { navigation: any }) => {
+export default function Review() {
+  const router = useRouter();
+
   const [rating, setRating] = useState(0);
   const stars = Array(5).fill(0);
 
@@ -20,7 +23,11 @@ const ReviewScreen = ({ navigation }: { navigation: any }) => {
   return (
     <SafeAreaView style={styles.container}>
       {/* Back Button */}
-      <TouchableOpacity onPress={() => navigation.goBack()}>
+      <TouchableOpacity
+        onPress={() => {
+          router.back();
+        }}
+      >
         <Text style={styles.backButton}>←</Text>
       </TouchableOpacity>
 
@@ -28,7 +35,7 @@ const ReviewScreen = ({ navigation }: { navigation: any }) => {
       <View style={styles.infoSection}>
         <View style={styles.titleRow}>
           <Image
-            source={require("../../assets/images/toilet.png")} // Add toilet image
+            source={require("../../../assets/images/toilet.png")} // Add toilet image
             style={styles.toiletIcon}
           />
           <Text style={styles.title}>Salesforce Tower Floor 1</Text>
@@ -63,7 +70,7 @@ const ReviewScreen = ({ navigation }: { navigation: any }) => {
       <TouchableOpacity style={styles.pictureUpload}>
         <Text style={styles.pictureText}>Picture</Text>
         <Image
-          source={require("../../assets/images/upload-icon.png")} // Replace with your upload icon
+          source={require("../../../assets/images/upload-icon.png")} // Replace with your upload icon
           style={styles.uploadIcon}
         />
       </TouchableOpacity>
@@ -72,22 +79,9 @@ const ReviewScreen = ({ navigation }: { navigation: any }) => {
       <TouchableOpacity style={styles.addReviewButton}>
         <Text style={styles.addReviewText}>Add Review</Text>
       </TouchableOpacity>
-
-      {/* Bottom Tab */}
-      <View style={styles.bottomTab}>
-        <TouchableOpacity>
-          <Text style={[styles.icon, styles.activeIcon]}>🏠</Text>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Text style={styles.icon}>➕</Text>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Text style={styles.icon}>👤</Text>
-        </TouchableOpacity>
-      </View>
     </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -189,5 +183,3 @@ const styles = StyleSheet.create({
     color: "#007AFF",
   },
 });
-
-export default ReviewScreen;

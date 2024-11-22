@@ -56,7 +56,8 @@ const SalesforceScreen = ({ navigation }: { navigation: any }) => {
           <View style={styles.titleSection}>
             <Text style={styles.title}>Salesforce Floor 1</Text>
             <View style={styles.ratingRow}>
-              {renderStars(4)} <Text style={styles.reviewCount}>83 reviews</Text>
+              {renderStars(4)}{" "}
+              <Text style={styles.reviewCount}>83 reviews</Text>
             </View>
           </View>
           <View style={styles.icons}>
@@ -87,9 +88,7 @@ const SalesforceScreen = ({ navigation }: { navigation: any }) => {
                 <Text style={styles.reviewerName}>{item.name}</Text>
                 <Text style={styles.reviewTime}>{item.time}</Text>
               </View>
-              <View style={styles.ratingRow}>
-                {renderStars(item.rating)}
-              </View>
+              <View style={styles.ratingRow}>{renderStars(item.rating)}</View>
               <Text style={styles.reviewText}>{item.comment}</Text>
             </View>
           </View>
@@ -104,19 +103,6 @@ const SalesforceScreen = ({ navigation }: { navigation: any }) => {
       >
         <Text style={styles.reviewButtonText}>Leave a Review!</Text>
       </TouchableOpacity>
-
-      {/* Bottom Tab */}
-      <View style={styles.bottomTab}>
-        <TouchableOpacity>
-          <Text style={[styles.icon, styles.activeIcon]}>🏠</Text>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Text style={styles.icon}>➕</Text>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Text style={styles.icon}>👤</Text>
-        </TouchableOpacity>
-      </View>
     </SafeAreaView>
   );
 };

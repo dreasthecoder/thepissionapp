@@ -1,36 +1,30 @@
-import React from "react";
+import React, { useState } from "react";
+import { useRouter } from "expo-router";
 import {
   View,
   Text,
   StyleSheet,
+  Image,
   TouchableOpacity,
   FlatList,
-  Image,
   SafeAreaView,
 } from "react-native";
 
-const SanFranciscoScreen = ({ navigation }: { navigation: any }) => {
-  const restrooms = [
-    { id: "1", name: "Salesforce Floor 1", rating: 4 },
-    { id: "2", name: "Castro Theatre Entrance", rating: 3 },
-    { id: "3", name: "H&M Floor 2", rating: 5 },
+export default function Profile() {
+  const [activeTab, setActiveTab] = useState("saved");
+  const router = useRouter();
+
+  const savedRestrooms = ["In San Francisco", "In Palo Alto", "At Stanford"];
+  const addedRestrooms = [
+    "Restroom 1 Added",
+    "Restroom 2 Added",
+    "Restroom 3 Added",
   ];
-
-  const renderStars = (rating: number) => {
-    return Array(5)
-      .fill(null)
-      .map((_, i) => (
-        <Text key={i} style={styles.star}>
-          {i < rating ? "⭐" : "☆"}
-        </Text>
-      ));
-  };
-
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header Section */}
+      {/* Profile Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.navigate("Profile")}>
+        <TouchableOpacity>
           <Text style={styles.backButton}>←</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.logoutButton}>
@@ -41,7 +35,7 @@ const SanFranciscoScreen = ({ navigation }: { navigation: any }) => {
       {/* Profile Section */}
       <View style={styles.profileSection}>
         <Image
-          source={require("../../assets/images/james.jpg")}
+          source={require("../../../assets/images/james.jpg")}
           style={styles.profileImage}
         />
         <Text style={styles.name}>James Landay</Text>
@@ -50,58 +44,61 @@ const SanFranciscoScreen = ({ navigation }: { navigation: any }) => {
 
       {/* Toggle Section */}
       <View style={styles.toggleContainer}>
-        <TouchableOpacity style={[styles.toggleButton, styles.activeToggle]}>
-          <Text style={[styles.toggleText, styles.activeToggleText]}>
+        <TouchableOpacity
+          style={[
+            styles.toggleButton,
+            activeTab === "saved" && styles.activeToggle,
+          ]}
+          onPress={() => setActiveTab("saved")}
+        >
+          <Text
+            style={[
+              styles.toggleText,
+              activeTab === "saved" && styles.activeToggleText,
+            ]}
+          >
             Restrooms Saved
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.toggleButton}>
-          <Text style={styles.toggleText}>Restrooms Added</Text>
+        <TouchableOpacity
+          style={[
+            styles.toggleButton,
+            activeTab === "added" && styles.activeToggle,
+          ]}
+          onPress={() => setActiveTab("added")}
+        >
+          <Text
+            style={[
+              styles.toggleText,
+              activeTab === "added" && styles.activeToggleText,
+            ]}
+          >
+            Restrooms Added
+          </Text>
         </TouchableOpacity>
       </View>
 
-      {/* San Francisco Title */}
-      <Text style={styles.cityTitle}>
-        San Francisco <Text style={styles.cityIcon}>📍</Text>
-      </Text>
-
-      {/* Restroom List */}
+      {/* List Section */}
       <FlatList
-        data={restrooms}
-        keyExtractor={(item) => item.id}
+        data={activeTab === "saved" ? savedRestrooms : addedRestrooms}
+        keyExtractor={(item, index) => index.toString()}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.listItem}
             onPress={() => {
-              if (item.name === "Salesforce Floor 1") {
-                navigation.navigate("Salesforce");
+              if (item === "In San Francisco") {
+                router.push("/tabs/profile/city");
               }
             }}
           >
-            <View style={styles.listItemContent}>
-              <Text style={styles.listItemText}>{item.name}</Text>
-              <View style={styles.rating}>{renderStars(item.rating)}</View>
-            </View>
+            <Text style={styles.listItemText}>{item}</Text>
             <Text style={styles.arrow}>{">"}</Text>
           </TouchableOpacity>
         )}
       />
-
-      {/* Bottom Tab */}
-      <View style={styles.bottomTab}>
-        <TouchableOpacity>
-          <Text style={[styles.icon, styles.activeIcon]}>🏠</Text>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Text style={styles.icon}>➕</Text>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Text style={styles.icon}>👤</Text>
-        </TouchableOpacity>
-      </View>
     </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -172,20 +169,10 @@ const styles = StyleSheet.create({
   activeToggleText: {
     color: "#FFF",
   },
-  cityTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginTop: 20,
-    color: "#007AFF",
-  },
-  cityIcon: {
-    fontSize: 16,
-  },
   listItem: {
+    marginTop: 30,
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
     padding: 15,
     backgroundColor: "#f8f8f8",
     marginHorizontal: 20,
@@ -200,41 +187,20 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 3,
   },
-  listItemContent: {
-    flexDirection: "column",
-  },
   listItemText: {
     fontSize: 16,
-    fontWeight: "500",
-  },
-  rating: {
-    flexDirection: "row",
-    marginTop: 5,
-  },
-  star: {
-    fontSize: 16,
-    color: "gold",
   },
   arrow: {
     fontSize: 18,
     color: "gray",
   },
-  bottomTab: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: 10,
-    backgroundColor: "#f2f2f2",
-    position: "absolute",
-    bottom: 0,
-    width: "100%",
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 10,
   },
-  icon: {
-    fontSize: 20,
+  text: {
+    fontSize: 16,
     color: "gray",
   },
-  activeIcon: {
-    color: "#007AFF",
-  },
 });
-
-export default SanFranciscoScreen;

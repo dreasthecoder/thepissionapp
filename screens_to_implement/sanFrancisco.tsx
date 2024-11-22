@@ -1,44 +1,36 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   Text,
   StyleSheet,
-  Image,
   TouchableOpacity,
   FlatList,
+  Image,
   SafeAreaView,
 } from "react-native";
-import { createStackNavigator } from "@react-navigation/stack";
-import SanFranciscoScreen from "./sanFrancisco"; // Import from tabs/sanFrancisco
-import SalesforceScreen from "./salesforce";
-import ReviewScreen from "./review";
 
-// Define types for the Stack Navigator
-type RootStackParamList = {
-  Profile: undefined;
-  SanFrancisco: undefined;
-  Salesforce: undefined;
-};
-
-// Create the stack navigator with types
-const Stack = createStackNavigator<RootStackParamList>();
-
-// Profile Screen Component
-const ProfileScreen = ({ navigation }: { navigation: any }) => {
-  const [activeTab, setActiveTab] = useState("saved");
-
-  const savedRestrooms = ["In San Francisco", "In Palo Alto", "At Stanford"];
-  const addedRestrooms = [
-    "Restroom 1 Added",
-    "Restroom 2 Added",
-    "Restroom 3 Added",
+const SanFranciscoScreen = ({ navigation }: { navigation: any }) => {
+  const restrooms = [
+    { id: "1", name: "Salesforce Floor 1", rating: 4 },
+    { id: "2", name: "Castro Theatre Entrance", rating: 3 },
+    { id: "3", name: "H&M Floor 2", rating: 5 },
   ];
+
+  const renderStars = (rating: number) => {
+    return Array(5)
+      .fill(null)
+      .map((_, i) => (
+        <Text key={i} style={styles.star}>
+          {i < rating ? "⭐" : "☆"}
+        </Text>
+      ));
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Profile Header */}
+      {/* Header Section */}
       <View style={styles.header}>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate("Profile")}>
           <Text style={styles.backButton}>←</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.logoutButton}>
@@ -58,71 +50,43 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
 
       {/* Toggle Section */}
       <View style={styles.toggleContainer}>
-        <TouchableOpacity
-          style={[
-            styles.toggleButton,
-            activeTab === "saved" && styles.activeToggle,
-          ]}
-          onPress={() => setActiveTab("saved")}
-        >
-          <Text
-            style={[
-              styles.toggleText,
-              activeTab === "saved" && styles.activeToggleText,
-            ]}
-          >
+        <TouchableOpacity style={[styles.toggleButton, styles.activeToggle]}>
+          <Text style={[styles.toggleText, styles.activeToggleText]}>
             Restrooms Saved
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.toggleButton,
-            activeTab === "added" && styles.activeToggle,
-          ]}
-          onPress={() => setActiveTab("added")}
-        >
-          <Text
-            style={[
-              styles.toggleText,
-              activeTab === "added" && styles.activeToggleText,
-            ]}
-          >
-            Restrooms Added
-          </Text>
+        <TouchableOpacity style={styles.toggleButton}>
+          <Text style={styles.toggleText}>Restrooms Added</Text>
         </TouchableOpacity>
       </View>
 
-      {/* List Section */}
+      {/* San Francisco Title */}
+      <Text style={styles.cityTitle}>
+        San Francisco <Text style={styles.cityIcon}>📍</Text>
+      </Text>
+
+      {/* Restroom List */}
       <FlatList
-        data={activeTab === "saved" ? savedRestrooms : addedRestrooms}
-        keyExtractor={(item, index) => index.toString()}
+        data={restrooms}
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.listItem}
             onPress={() => {
-              if (item === "In San Francisco") {
-                navigation.navigate("SanFrancisco"); // Navigate to the SanFrancisco screen
+              if (item.name === "Salesforce Floor 1") {
+                navigation.navigate("Salesforce");
               }
             }}
           >
-            <Text style={styles.listItemText}>{item}</Text>
+            <View style={styles.listItemContent}>
+              <Text style={styles.listItemText}>{item.name}</Text>
+              <View style={styles.rating}>{renderStars(item.rating)}</View>
+            </View>
             <Text style={styles.arrow}>{">"}</Text>
           </TouchableOpacity>
         )}
       />
     </SafeAreaView>
-  );
-};
-
-// Stack Navigator for Profile and San Francisco
-const ProfileStack = () => {
-  return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Salesforce" component={SalesforceScreen} />
-      <Stack.Screen name="Profile" component={ProfileScreen} />
-      <Stack.Screen name="SanFrancisco" component={SanFranciscoScreen} />
-      <Stack.Screen name="Review" component={ReviewScreen} />
-    </Stack.Navigator>
   );
 };
 
@@ -195,10 +159,20 @@ const styles = StyleSheet.create({
   activeToggleText: {
     color: "#FFF",
   },
+  cityTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginTop: 20,
+    color: "#007AFF",
+  },
+  cityIcon: {
+    fontSize: 16,
+  },
   listItem: {
-    marginTop: 30,
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     padding: 15,
     backgroundColor: "#f8f8f8",
     marginHorizontal: 20,
@@ -213,22 +187,41 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 3,
   },
+  listItemContent: {
+    flexDirection: "column",
+  },
   listItemText: {
     fontSize: 16,
+    fontWeight: "500",
+  },
+  rating: {
+    flexDirection: "row",
+    marginTop: 5,
+  },
+  star: {
+    fontSize: 16,
+    color: "gold",
   },
   arrow: {
     fontSize: 18,
     color: "gray",
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 10,
+  bottomTab: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    paddingVertical: 10,
+    backgroundColor: "#f2f2f2",
+    position: "absolute",
+    bottom: 0,
+    width: "100%",
   },
-  text: {
-    fontSize: 16,
+  icon: {
+    fontSize: 20,
     color: "gray",
+  },
+  activeIcon: {
+    color: "#007AFF",
   },
 });
 
-export default ProfileStack;
+export default SanFranciscoScreen;
