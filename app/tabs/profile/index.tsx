@@ -20,6 +20,7 @@ export default function Profile() {
     "Restroom 2 Added",
     "Restroom 3 Added",
   ];
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Profile Header */}

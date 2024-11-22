@@ -10,14 +10,32 @@ import {
   SafeAreaView,
 } from "react-native";
 
+import { supabase } from "@/db";
+
 export default function Review() {
   const router = useRouter();
 
   const [rating, setRating] = useState(0);
+  const [comments, setComments] = useState("");
   const stars = Array(5).fill(0);
 
   const handleRating = (index: number) => {
     setRating(index + 1); // Update rating based on star clicked
+  };
+
+  const addReview = async () => {
+    try {
+      await supabase.from("reviews").insert([
+        {
+          rating: rating,
+          text: comments,
+          name: "James Landay",
+        },
+      ]);
+      router.back(); // Go back to the profile screen
+    } catch (error) {
+      console.log("Error adding review:", error.message);
+    }
   };
 
   return (
@@ -64,9 +82,17 @@ export default function Review() {
         placeholder="Comments"
         placeholderTextColor="gray"
         multiline={true}
+        onChangeText={(text) => setComments(text)} // Update state variable with comments
       />
 
       {/* Picture Upload */}
+      {/* <TouchableOpacity style={styles.pictureUpload}>
+        <Text style={styles.pictureText}>Picture</Text>
+        <Image
+            source={require("../../../assets/images/upload-icon.png")} // Replace with your upload icon
+            style={styles.uploadIcon}
+        />
+    </TouchableOpacity> */}
       {/* <TouchableOpacity style={styles.pictureUpload}>
         <Text style={styles.pictureText}>Picture</Text>
         <Image
@@ -76,7 +102,7 @@ export default function Review() {
       </TouchableOpacity> */}
 
       {/* Add Review Button */}
-      <TouchableOpacity style={styles.addReviewButton} onPress={() => {}}>
+      <TouchableOpacity style={styles.addReviewButton} onPress={addReview}>
         <Text style={styles.addReviewText}>Add Review</Text>
       </TouchableOpacity>
     </SafeAreaView>

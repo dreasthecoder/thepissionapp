@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
 import {
   View,
@@ -9,10 +9,13 @@ import {
   Image,
   SafeAreaView,
 } from "react-native";
+import { supabase } from "@/db";
+import timeAgo from "@/utils/timeAgo";
 
 export default function Restroom() {
   const router = useRouter();
-  const reviews = [
+  const [reviews, setReviews] = useState([]);
+  const reviews2 = [
     {
       id: "1",
       name: "James Landay",
@@ -30,6 +33,23 @@ export default function Restroom() {
       avatar: require("../../../assets/images/eli.jpg"),
     },
   ];
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const response = await supabase.from("reviews").select("*");
+        let reviews = response.data;
+
+        setReviews(reviews);
+
+        console.log("Reviews:", response.data);
+      } catch (error) {
+        console.log("Error fetching reviews:", error.message);
+      }
+    };
+
+    fetchReviews();
+  }, []);
 
   const renderStars = (rating: number) => {
     return Array(5)
@@ -62,7 +82,7 @@ export default function Restroom() {
           <View style={styles.titleSection}>
             <Text style={styles.title}>Salesforce Floor 1</Text>
             <View style={styles.ratingRow}>
-              {renderStars(4)}{" "}
+              <Text>{renderStars(4)} </Text>
               <Text style={styles.reviewCount}>83 reviews</Text>
             </View>
           </View>
@@ -82,8 +102,8 @@ export default function Restroom() {
       </View>
 
       {/* Reviews Section */}
-      <FlatList
-        data={reviews}
+      {/* <FlatList
+        data={reviews2}
         keyExtractor={(item) => item.id}
         ListHeaderComponent={<Text style={styles.reviewHeader}>Reviews</Text>}
         renderItem={({ item }) => (
@@ -96,6 +116,30 @@ export default function Restroom() {
               </View>
               <View style={styles.ratingRow}>{renderStars(item.rating)}</View>
               <Text style={styles.reviewText}>{item.comment}</Text>
+            </View>
+          </View>
+        )}
+        ListFooterComponent={<Text style={styles.loadMore}>Load More...</Text>}
+      /> */}
+      <FlatList
+        data={reviews}
+        keyExtractor={(item) => item.id}
+        ListHeaderComponent={<Text style={styles.reviewHeader}>Reviews</Text>}
+        renderItem={({ item }) => (
+          <View style={styles.reviewCard}>
+            <Image
+              source={require("../../../assets/images/james.jpg")}
+              style={styles.avatar}
+            />
+            <View style={styles.reviewContent}>
+              <View style={styles.reviewHeader}>
+                <Text style={styles.reviewerName}>{item.name}</Text>
+                <Text style={styles.reviewTime}>
+                  {timeAgo(item.created_at)}
+                </Text>
+              </View>
+              <View style={styles.ratingRow}>{renderStars(item.rating)}</View>
+              <Text style={styles.reviewText}>{item.text}</Text>
             </View>
           </View>
         )}
