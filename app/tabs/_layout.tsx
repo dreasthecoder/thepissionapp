@@ -1,12 +1,20 @@
 import { Tabs } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Text, View } from "react-native";
+import theme from "@/assets/theme";
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarActiveTintColor: theme.colors.pissionYellow,
+        tabBarInactiveTintColor: "#ccc",
+        tabBarStyle: {
+          backgroundColor: theme.colors.black,
+          borderTopWidth: 1,
+          borderColor: theme.colors.pissionYellow,
+        },
       }}
     >
       <Tabs.Screen

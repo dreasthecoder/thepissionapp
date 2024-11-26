@@ -10,6 +10,8 @@ import {
   SafeAreaView,
 } from "react-native";
 
+import theme from "@/assets/theme";
+
 export default function Profile() {
   const [activeTab, setActiveTab] = useState("saved");
   const router = useRouter();
@@ -25,9 +27,6 @@ export default function Profile() {
     <SafeAreaView style={styles.container}>
       {/* Profile Header */}
       <View style={styles.header}>
-        <TouchableOpacity>
-          <Text style={styles.backButton}>←</Text>
-        </TouchableOpacity>
         <TouchableOpacity style={styles.logoutButton}>
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
@@ -104,19 +103,15 @@ export default function Profile() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: theme.colors.black,
   },
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
     padding: 15,
   },
-  backButton: {
-    fontSize: 18,
-    color: "black",
-  },
   logoutButton: {
-    backgroundColor: "#f5f5f5",
+    backgroundColor: theme.colors.pissionYellow,
     paddingVertical: 5,
     paddingHorizontal: 15,
     borderRadius: 10,
@@ -125,6 +120,7 @@ const styles = StyleSheet.create({
   logoutText: {
     fontSize: 12,
     color: "#333",
+    fontWeight: "bold",
   },
   profileSection: {
     alignItems: "center",
@@ -139,15 +135,16 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     marginTop: 10,
+    color: theme.colors.pissionYellow,
   },
   location: {
     fontSize: 14,
-    color: "gray",
+    color: theme.colors.pissionYellow,
   },
   toggleContainer: {
     flexDirection: "row",
     justifyContent: "center",
-    backgroundColor: "#F5F5F5",
+    backgroundColor: theme.colors.pissionYellow,
     borderRadius: 20,
     marginHorizontal: 20,
     padding: 5,
@@ -160,7 +157,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
   },
   activeToggle: {
-    backgroundColor: "#007AFF",
+    backgroundColor: "white",
   },
   toggleText: {
     fontSize: 14,
@@ -168,14 +165,14 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   activeToggleText: {
-    color: "#FFF",
+    color: "black",
   },
   listItem: {
     marginTop: 30,
     flexDirection: "row",
     justifyContent: "space-between",
     padding: 15,
-    backgroundColor: "#f8f8f8",
+    backgroundColor: theme.colors.pissionYellow,
     marginHorizontal: 20,
     marginVertical: 5,
     borderRadius: 10,
@@ -190,10 +187,6 @@ const styles = StyleSheet.create({
   },
   listItemText: {
     fontSize: 16,
-  },
-  arrow: {
-    fontSize: 18,
-    color: "gray",
   },
   title: {
     fontSize: 24,
