@@ -122,7 +122,7 @@ export default function Add() {
             description: { fontWeight: 'bold' },
           }}
           query={{
-            key: 'AIzaSyAjXqODrQRYw-6zr-7AfS48n8EtJEzzIJI',
+            key: 'INPUT AND DELETE BEFORE PUSHING', // CHECK TEXTS AND INPUT THIS
             language: 'en',
           }}
           fetchDetails={true}
