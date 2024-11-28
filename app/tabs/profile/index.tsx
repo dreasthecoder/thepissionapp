@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
 import {
   View,
@@ -8,20 +8,53 @@ import {
   TouchableOpacity,
   FlatList,
   SafeAreaView,
+  ActivityIndicator,
 } from "react-native";
 
+import { supabase } from "@/db";
 import theme from "@/assets/theme";
+
+interface Restroom {
+  id: string;
+  name: string;
+  created_at: string;
+}
 
 export default function Profile() {
   const [activeTab, setActiveTab] = useState("saved");
+  const [restrooms, setRestrooms] = useState<Restroom[]>([]);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const savedRestrooms = ["In San Francisco", "In Palo Alto", "At Stanford"];
-  const addedRestrooms = [
-    "Restroom 1 Added",
-    "Restroom 2 Added",
-    "Restroom 3 Added",
-  ];
+  useEffect(() => {
+    fetchRestrooms();
+  }, []);
+
+  const fetchRestrooms = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('restrooms')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setRestrooms(data || []);
+    } catch (error) {
+      console.error('Error fetching restrooms:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderRestroom = ({ item }: { item: Restroom }) => (
+    <TouchableOpacity
+      style={styles.listItem}
+      onPress={() => router.push(`/tabs/profile/restroom?id=${item.id}`)}
+    >
+      <Text style={styles.listItemText}>{item.name}</Text>
+      <Text style={styles.arrow}>{">"}</Text>
+    </TouchableOpacity>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -79,23 +112,22 @@ export default function Profile() {
       </View>
 
       {/* List Section */}
-      <FlatList
-        data={activeTab === "saved" ? savedRestrooms : addedRestrooms}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.listItem}
-            onPress={() => {
-              if (item === "In San Francisco") {
-                router.push("/tabs/profile/city");
-              }
-            }}
-          >
-            <Text style={styles.listItemText}>{item}</Text>
-            <Text style={styles.arrow}>{">"}</Text>
-          </TouchableOpacity>
-        )}
-      />
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.lightColors.primary} />
+        </View>
+      ) : (
+        <FlatList
+          data={restrooms}
+          keyExtractor={(item) => item.id}
+          renderItem={renderRestroom}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No restrooms found</Text>
+            </View>
+          }
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -103,98 +135,89 @@ export default function Profile() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.black,
+    backgroundColor: "#fff",
   },
   header: {
     flexDirection: "row",
     justifyContent: "flex-end",
-    padding: 15,
+    alignItems: "center",
+    padding: 8,
   },
   logoutButton: {
-    backgroundColor: theme.colors.pissionYellow,
-    paddingVertical: 5,
-    paddingHorizontal: 15,
-    borderRadius: 10,
-    marginTop: 20,
+    padding: 8,
   },
   logoutText: {
-    fontSize: 12,
-    color: "#333",
-    fontWeight: "bold",
+    color: theme.lightColors.primary,
+    fontSize: 16,
   },
   profileSection: {
     alignItems: "center",
-    marginTop: 10,
+    padding: 20,
   },
   profileImage: {
     width: 100,
     height: 100,
     borderRadius: 50,
+    marginBottom: 12,
   },
   name: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: "bold",
-    marginTop: 10,
-    color: theme.colors.pissionYellow,
+    marginBottom: 4,
   },
   location: {
-    fontSize: 14,
-    color: theme.colors.pissionYellow,
+    fontSize: 16,
+    color: "gray",
   },
   toggleContainer: {
     flexDirection: "row",
-    justifyContent: "center",
-    backgroundColor: theme.colors.pissionYellow,
-    borderRadius: 20,
-    marginHorizontal: 20,
-    padding: 5,
-    marginTop: 20,
+    marginBottom: 16,
+    paddingHorizontal: 16,
   },
   toggleButton: {
     flex: 1,
+    paddingVertical: 8,
     alignItems: "center",
-    paddingVertical: 10,
-    borderRadius: 15,
-  },
-  activeToggle: {
-    backgroundColor: "white",
   },
   toggleText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#000",
+    fontSize: 16,
+    color: "gray",
+  },
+  activeToggle: {
+    borderBottomWidth: 2,
+    borderBottomColor: theme.lightColors.primary,
   },
   activeToggleText: {
-    color: "black",
+    color: theme.lightColors.primary,
+    fontWeight: "bold",
   },
   listItem: {
-    marginTop: 30,
     flexDirection: "row",
     justifyContent: "space-between",
-    padding: 15,
-    backgroundColor: theme.colors.pissionYellow,
-    marginHorizontal: 20,
-    marginVertical: 5,
-    borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 3,
+    alignItems: "center",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
   },
   listItemText: {
     fontSize: 16,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  text: {
+  arrow: {
     fontSize: 16,
     color: "gray",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emptyContainer: {
+    padding: 24,
+    alignItems: "center",
+  },
+  emptyText: {
+    fontSize: 16,
+    color: "gray",
+    textAlign: "center",
   },
 });
