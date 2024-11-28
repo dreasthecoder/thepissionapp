@@ -10,9 +10,10 @@ import {
   SafeAreaView,
   ActivityIndicator,
 } from "react-native";
-
+import * as Location from 'expo-location';
 import { supabase } from "@/db";
 import theme from "@/assets/theme";
+import { getDeviceId, type DeviceProfile } from "@/app/utils/device";
 
 interface Restroom {
   id: string;
@@ -24,21 +25,95 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState("saved");
   const [restrooms, setRestrooms] = useState<Restroom[]>([]);
   const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<DeviceProfile | null>(null);
+  const [location, setLocation] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    fetchRestrooms();
+    fetchProfile();
+    fetchLocation();
   }, []);
+
+  useEffect(() => {
+    fetchRestrooms();
+  }, [activeTab]);
+
+  const fetchProfile = async () => {
+    try {
+      const deviceId = await getDeviceId();
+      const { data, error } = await supabase
+        .from('device_profiles')
+        .select('*')
+        .eq('id', deviceId)
+        .single();
+
+      if (error) throw error;
+      setProfile(data);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
+
+  const getFormattedLocation = (city: string | null, state: string | null) => {
+    if (city && state) {
+      return `${city}, ${state}`;
+    }
+    return 'Location not available';
+  };
+
+  const fetchLocation = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        console.log('Location permission denied');
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({});
+      const [address] = await Location.reverseGeocodeAsync({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+
+      if (address) {
+        setLocation(getFormattedLocation(address.city, address.region));
+      }
+    } catch (error) {
+      console.error('Error getting location:', error);
+    }
+  };
 
   const fetchRestrooms = async () => {
     try {
-      const { data, error } = await supabase
-        .from('restrooms')
-        .select('*')
-        .order('created_at', { ascending: false });
+      setLoading(true);
+      const deviceId = await getDeviceId();
+      
+      let query;
+      if (activeTab === "added") {
+        query = supabase
+          .from('restrooms')
+          .select('*')
+          .eq('creator_device_id', deviceId)
+          .order('created_at', { ascending: false });
+      } else if (activeTab === "saved") {
+        query = supabase
+          .from('saved_restrooms')
+          .select(`
+            restroom:restroom_id (*)
+          `)
+          .eq('device_id', deviceId)
+          .order('created_at', { ascending: false });
+      }
 
+      const { data, error } = await query as { data: any, error: any };
       if (error) throw error;
-      setRestrooms(data || []);
+      
+      // Transform the data if it's from saved restrooms query
+      const transformedData = activeTab === "saved" 
+        ? data.map((item: any) => item.restroom)
+        : data;
+      
+      setRestrooms(transformedData || []);
     } catch (error) {
       console.error('Error fetching restrooms:', error);
     } finally {
@@ -67,12 +142,16 @@ export default function Profile() {
 
       {/* Profile Section */}
       <View style={styles.profileSection}>
-        <Image
-          source={require("../../../assets/images/james.jpg")}
-          style={styles.profileImage}
-        />
-        <Text style={styles.name}>James Landay</Text>
-        <Text style={styles.location}>Stanford, CA</Text>
+        {profile?.profile_image ? (
+          <Image
+            source={{ uri: profile.profile_image }}
+            style={styles.profileImage}
+          />
+        ) : (
+          <View style={[styles.profileImage, styles.profileImagePlaceholder]} />
+        )}
+        <Text style={styles.name}>{profile?.name || 'Loading...'}</Text>
+        <Text style={styles.location}>{location || 'Location not available'}</Text>
       </View>
 
       {/* Toggle Section */}
@@ -113,19 +192,13 @@ export default function Profile() {
 
       {/* List Section */}
       {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.lightColors.primary} />
-        </View>
+        <ActivityIndicator style={styles.loader} color={theme.lightColors.primary} />
       ) : (
         <FlatList
           data={restrooms}
-          keyExtractor={(item) => item.id}
           renderItem={renderRestroom}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No restrooms found</Text>
-            </View>
-          }
+          keyExtractor={(item) => item.id}
+          style={styles.list}
         />
       )}
     </SafeAreaView>
@@ -135,13 +208,12 @@ export default function Profile() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: theme.lightColors.background,
   },
   header: {
     flexDirection: "row",
     justifyContent: "flex-end",
-    alignItems: "center",
-    padding: 8,
+    padding: 16,
   },
   logoutButton: {
     padding: 8,
@@ -152,7 +224,7 @@ const styles = StyleSheet.create({
   },
   profileSection: {
     alignItems: "center",
-    padding: 20,
+    paddingVertical: 20,
   },
   profileImage: {
     width: 100,
@@ -160,19 +232,25 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     marginBottom: 12,
   },
+  profileImagePlaceholder: {
+    backgroundColor: theme.lightColors.accent,
+  },
   name: {
     fontSize: 24,
-    fontWeight: "bold",
+    fontWeight: "600",
     marginBottom: 4,
+    color: theme.lightColors.text,
   },
   location: {
     fontSize: 16,
-    color: "gray",
+    color: theme.lightColors.text,
+    opacity: 0.6,
+    marginBottom: 20,
   },
   toggleContainer: {
     flexDirection: "row",
-    marginBottom: 16,
     paddingHorizontal: 16,
+    marginBottom: 16,
   },
   toggleButton: {
     flex: 1,
@@ -180,8 +258,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   toggleText: {
+    color: "#000",
     fontSize: 16,
-    color: "gray",
+    fontWeight: "500",
   },
   activeToggle: {
     borderBottomWidth: 2,
@@ -189,35 +268,29 @@ const styles = StyleSheet.create({
   },
   activeToggleText: {
     color: theme.lightColors.primary,
-    fontWeight: "bold",
+    fontWeight: "600",
+  },
+  list: {
+    flex: 1,
   },
   listItem: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
+    justifyContent: "space-between",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: `${theme.lightColors.accent}20`,
   },
   listItemText: {
     fontSize: 16,
+    color: theme.lightColors.text,
   },
   arrow: {
     fontSize: 16,
-    color: "gray",
+    color: theme.lightColors.text,
+    opacity: 0.6,
   },
-  loadingContainer: {
+  loader: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  emptyContainer: {
-    padding: 24,
-    alignItems: "center",
-  },
-  emptyText: {
-    fontSize: 16,
-    color: "gray",
-    textAlign: "center",
   },
 });

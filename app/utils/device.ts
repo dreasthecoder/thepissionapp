@@ -43,7 +43,7 @@ export async function createDeviceProfile(deviceId: string) {
       created_at: new Date().toISOString(),
     });
 
-  if (error && error.code !== '23505') { // Ignore unique violation errors
+  if (error) {
     console.error('Error creating device profile:', error);
   }
 }
@@ -55,7 +55,7 @@ export async function getDeviceProfile(): Promise<DeviceProfile | null> {
     .from('device_profiles')
     .select('*')
     .eq('id', deviceId)
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error('Error fetching device profile:', error);
@@ -85,5 +85,16 @@ export async function updateDeviceProfile(updates: Partial<DeviceProfile>): Prom
 
 export async function isOnboardingComplete(): Promise<boolean> {
   const profile = await getDeviceProfile();
-  return !!(profile?.name && profile?.profile_image); // Returns true if both name and profile_image exist
+  return !!(profile?.name && profile?.profile_image);
 }
+
+// Add a default export to satisfy the router
+const deviceUtils = {
+  getDeviceId,
+  createDeviceProfile,
+  getDeviceProfile,
+  updateDeviceProfile,
+  isOnboardingComplete,
+};
+
+export default deviceUtils;

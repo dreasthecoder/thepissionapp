@@ -20,6 +20,7 @@ import timeAgo from "@/utils/timeAgo";
 import * as Location from 'expo-location';
 import MapView, { Marker } from 'react-native-maps';
 import { FontAwesome } from "@expo/vector-icons";
+import { getDeviceId } from "@/app/utils/device";
 
 interface Review {
   id: string;
@@ -42,6 +43,11 @@ interface Restroom {
   created_at: string;
 }
 
+interface SavedStatus {
+  isSaved: boolean;
+  id?: string;
+}
+
 export default function RestroomPage() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
@@ -50,10 +56,12 @@ export default function RestroomPage() {
   const [loading, setLoading] = useState(true);
   const [distance, setDistance] = useState<string>('');
   const [averageRating, setAverageRating] = useState(0);
+  const [savedStatus, setSavedStatus] = useState<SavedStatus>({ isSaved: false });
 
   useEffect(() => {
     fetchRestroomDetails();
     fetchReviews();
+    checkIfSaved();
   }, [id]);
 
   useEffect(() => {
@@ -171,6 +179,57 @@ export default function RestroomPage() {
     }
   };
 
+  const checkIfSaved = async () => {
+    try {
+      if (!id) return;
+      const deviceId = await getDeviceId();
+      const { data, error } = await supabase
+        .from('saved_restrooms')
+        .select('id')
+        .eq('device_id', deviceId)
+        .eq('restroom_id', id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      setSavedStatus({ isSaved: !!data, id: data?.id });
+    } catch (error) {
+      console.error('Error checking saved status:', error);
+    }
+  };
+
+  const toggleSave = async () => {
+    try {
+      if (!id) return;
+      const deviceId = await getDeviceId();
+      
+      if (savedStatus.isSaved) {
+        // Unsave
+        const { error } = await supabase
+          .from('saved_restrooms')
+          .delete()
+          .eq('id', savedStatus.id);
+        
+        if (error) throw error;
+        setSavedStatus({ isSaved: false });
+      } else {
+        // Save
+        const { error } = await supabase
+          .from('saved_restrooms')
+          .insert([
+            {
+              device_id: deviceId,
+              restroom_id: id,
+            },
+          ]);
+        
+        if (error) throw error;
+        checkIfSaved();
+      }
+    } catch (error) {
+      console.error('Error toggling save:', error);
+    }
+  };
+
   if (loading || !restroom) {
     return (
       <View style={styles.loadingContainer}>
@@ -187,6 +246,12 @@ export default function RestroomPage() {
             <FontAwesome name="arrow-left" size={20} color="#666" />
           </Pressable>
           <Text style={styles.title}>{restroom?.name}</Text>
+          <Pressable 
+            style={[styles.saveButton, savedStatus.isSaved ? styles.savedButton : styles.unsavedButton]}
+            onPress={toggleSave}
+          >
+            <FontAwesome name={savedStatus.isSaved ? "bookmark" : "bookmark-o"} size={20} color="#fff" />
+          </Pressable>
         </View>
         <View style={styles.ratingContainer}>
           <FontAwesome name="star" size={20} color="#FFD700" />
@@ -295,6 +360,17 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     flex: 1,
     marginLeft: 8,
+  },
+  saveButton: {
+    padding: 4,
+    width: 28,
+    marginLeft: 8,
+  },
+  savedButton: {
+    backgroundColor: theme.lightColors.primary,
+  },
+  unsavedButton: {
+    backgroundColor: '#ccc',
   },
   ratingContainer: {
     flexDirection: 'row',

@@ -12,9 +12,10 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
-import { updateDeviceProfile } from '@/utils/device';
+import { getDeviceId } from '../app/utils/device';
 import { supabase } from '@/db';
 import theme from '@/assets/theme';
+import { Buffer } from 'buffer';
 
 export default function Onboarding() {
   const [name, setName] = useState('');
@@ -22,15 +23,20 @@ export default function Onboarding() {
   const [loading, setLoading] = useState(false);
 
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
 
-    if (!result.canceled) {
-      setImage(result.assets[0].uri);
+      if (!result.canceled && result.assets[0]) {
+        setImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      alert('Error selecting image. Please try again.');
     }
   };
 
@@ -42,30 +48,52 @@ export default function Onboarding() {
 
     setLoading(true);
     try {
+      // Get device ID
+      const deviceId = await getDeviceId();
+
       // Upload image to Supabase Storage
       const response = await fetch(image);
-      const blob = await response.blob();
+      const imageData = await response.arrayBuffer();
+      const base64String = Buffer.from(imageData).toString('base64');
       const fileName = `profile_${Date.now()}.jpg`;
+      
+      console.log('Image data length:', base64String.length);
+      
+      // Get the mime type from the response
+      const mimeType = response.headers.get('content-type') || 'image/jpeg';
+      console.log('Upload mime type:', mimeType);
       
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('profiles')
-        .upload(fileName, blob, {
-          contentType: 'image/jpeg',
+        .upload(fileName, Buffer.from(base64String, 'base64'), {
+          contentType: mimeType,
           upsert: true
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw new Error('Failed to upload image');
+      }
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('profiles')
         .getPublicUrl(fileName);
 
-      // Update profile
-      await updateDeviceProfile({
-        name: name.trim(),
-        profile_image: publicUrl
-      });
+      // Create new profile
+      const { error: profileError } = await supabase
+        .from('device_profiles')
+        .insert({
+          id: deviceId,
+          name: name.trim(),
+          profile_image: publicUrl,
+          created_at: new Date().toISOString()
+        });
+
+      if (profileError) {
+        console.error('Error creating profile:', profileError);
+        throw new Error('Failed to create profile');
+      }
 
       // Navigate to main app
       router.replace('/tabs/home');

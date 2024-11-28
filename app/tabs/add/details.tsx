@@ -12,6 +12,7 @@ import {
 import { useLocalSearchParams, router } from 'expo-router';
 import { supabase } from '@/db';
 import { Ionicons } from '@expo/vector-icons';
+import { getDeviceId } from '@/app/utils/device';
 
 interface StarRatingProps {
   rating: number;
@@ -60,6 +61,8 @@ export default function AddDetails() {
 
     setIsLoading(true);
     try {
+      const deviceId = await getDeviceId();
+      
       // First, create the restroom
       const { data: restroomData, error: restroomError } = await supabase
         .from('restrooms')
@@ -73,6 +76,7 @@ export default function AddDetails() {
             is_accessible: isAccessible,
             rating: rating,
             review_count: 1,
+            creator_device_id: deviceId,
           },
         ])
         .select();
