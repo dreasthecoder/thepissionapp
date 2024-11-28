@@ -187,7 +187,7 @@ export default function Home() {
               description: { fontWeight: '400' },
             }}
             query={{
-              key: 'AIzaSyAjXqODrQRYw-6zr-7AfS48n8EtJEzzIJI',
+              key: 'AIzaSyCVkNkyWaCYNf84DSApdTVWaroCSeE9fe8',
               language: 'en',
             }}
             fetchDetails={true}
