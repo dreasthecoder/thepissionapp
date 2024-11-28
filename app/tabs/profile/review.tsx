@@ -8,11 +8,16 @@ import {
   TextInput,
   Image,
   SafeAreaView,
+  Alert,
 } from "react-native";
 
 import { supabase } from "@/db";
 
-export default function Review() {
+interface ReviewProps {
+  restroomId: string;
+}
+
+export default function Review({ restroomId }: ReviewProps) {
   const router = useRouter();
 
   const [rating, setRating] = useState(0);
@@ -24,17 +29,24 @@ export default function Review() {
   };
 
   const addReview = async () => {
+    if (!rating) {
+      Alert.alert('Error', 'Please select a rating');
+      return;
+    }
+
     try {
       await supabase.from("reviews").insert([
         {
           rating: rating,
-          text: comments,
-          name: "James Landay",
+          text: comments.trim(),
+          name: "Anonymous",
+          restroom_id: restroomId
         },
       ]);
       router.back(); // Go back to the profile screen
     } catch (error) {
-      console.log("Error adding review:", error.message);
+      console.error("Error adding review:", error instanceof Error ? error.message : "Unknown error");
+      Alert.alert('Error', 'Failed to add review');
     }
   };
 
