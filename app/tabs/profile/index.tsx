@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
 import {
   View,
@@ -8,20 +8,128 @@ import {
   TouchableOpacity,
   FlatList,
   SafeAreaView,
+  ActivityIndicator,
 } from "react-native";
-
+import * as Location from 'expo-location';
+import { supabase } from "@/db";
 import theme from "@/assets/theme";
+import { getDeviceId, type DeviceProfile } from "@/app/utils/device";
+
+interface Restroom {
+  id: string;
+  name: string;
+  created_at: string;
+}
 
 export default function Profile() {
   const [activeTab, setActiveTab] = useState("saved");
+  const [restrooms, setRestrooms] = useState<Restroom[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<DeviceProfile | null>(null);
+  const [location, setLocation] = useState<string | null>(null);
   const router = useRouter();
 
-  const savedRestrooms = ["In San Francisco", "In Palo Alto", "At Stanford"];
-  const addedRestrooms = [
-    "Restroom 1 Added",
-    "Restroom 2 Added",
-    "Restroom 3 Added",
-  ];
+  useEffect(() => {
+    fetchProfile();
+    fetchLocation();
+  }, []);
+
+  useEffect(() => {
+    fetchRestrooms();
+  }, [activeTab]);
+
+  const fetchProfile = async () => {
+    try {
+      const deviceId = await getDeviceId();
+      const { data, error } = await supabase
+        .from('device_profiles')
+        .select('*')
+        .eq('id', deviceId)
+        .single();
+
+      if (error) throw error;
+      setProfile(data);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
+
+  const getFormattedLocation = (city: string | null, state: string | null) => {
+    if (city && state) {
+      return `${city}, ${state}`;
+    }
+    return 'Location not available';
+  };
+
+  const fetchLocation = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        console.log('Location permission denied');
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({});
+      const [address] = await Location.reverseGeocodeAsync({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+
+      if (address) {
+        setLocation(getFormattedLocation(address.city, address.region));
+      }
+    } catch (error) {
+      console.error('Error getting location:', error);
+    }
+  };
+
+  const fetchRestrooms = async () => {
+    try {
+      setLoading(true);
+      const deviceId = await getDeviceId();
+      
+      let query;
+      if (activeTab === "added") {
+        query = supabase
+          .from('restrooms')
+          .select('*')
+          .eq('creator_device_id', deviceId)
+          .order('created_at', { ascending: false });
+      } else if (activeTab === "saved") {
+        query = supabase
+          .from('saved_restrooms')
+          .select(`
+            restroom:restroom_id (*)
+          `)
+          .eq('device_id', deviceId)
+          .order('created_at', { ascending: false });
+      }
+
+      const { data, error } = await query as { data: any, error: any };
+      if (error) throw error;
+      
+      // Transform the data if it's from saved restrooms query
+      const transformedData = activeTab === "saved" 
+        ? data.map((item: any) => item.restroom)
+        : data;
+      
+      setRestrooms(transformedData || []);
+    } catch (error) {
+      console.error('Error fetching restrooms:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderRestroom = ({ item }: { item: Restroom }) => (
+    <TouchableOpacity
+      style={styles.listItem}
+      onPress={() => router.push(`/tabs/profile/restroom?id=${item.id}`)}
+    >
+      <Text style={styles.listItemText}>{item.name}</Text>
+      <Text style={styles.arrow}>{">"}</Text>
+    </TouchableOpacity>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -34,12 +142,16 @@ export default function Profile() {
 
       {/* Profile Section */}
       <View style={styles.profileSection}>
-        <Image
-          source={require("../../../assets/images/james.jpg")}
-          style={styles.profileImage}
-        />
-        <Text style={styles.name}>James Landay</Text>
-        <Text style={styles.location}>Stanford, CA</Text>
+        {profile?.profile_image ? (
+          <Image
+            source={{ uri: profile.profile_image }}
+            style={styles.profileImage}
+          />
+        ) : (
+          <View style={[styles.profileImage, styles.profileImagePlaceholder]} />
+        )}
+        <Text style={styles.name}>{profile?.name || 'Loading...'}</Text>
+        <Text style={styles.location}>{location || 'Location not available'}</Text>
       </View>
 
       {/* Toggle Section */}
@@ -79,23 +191,16 @@ export default function Profile() {
       </View>
 
       {/* List Section */}
-      <FlatList
-        data={activeTab === "saved" ? savedRestrooms : addedRestrooms}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.listItem}
-            onPress={() => {
-              if (item === "In San Francisco") {
-                router.push("/tabs/profile/city");
-              }
-            }}
-          >
-            <Text style={styles.listItemText}>{item}</Text>
-            <Text style={styles.arrow}>{">"}</Text>
-          </TouchableOpacity>
-        )}
-      />
+      {loading ? (
+        <ActivityIndicator style={styles.loader} color={theme.lightColors.primary} />
+      ) : (
+        <FlatList
+          data={restrooms}
+          renderItem={renderRestroom}
+          keyExtractor={(item) => item.id}
+          style={styles.list}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -103,98 +208,89 @@ export default function Profile() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.black,
+    backgroundColor: theme.lightColors.background,
   },
   header: {
     flexDirection: "row",
     justifyContent: "flex-end",
-    padding: 15,
+    padding: 16,
   },
   logoutButton: {
-    backgroundColor: theme.colors.pissionYellow,
-    paddingVertical: 5,
-    paddingHorizontal: 15,
-    borderRadius: 10,
-    marginTop: 20,
+    padding: 8,
   },
   logoutText: {
-    fontSize: 12,
-    color: "#333",
-    fontWeight: "bold",
+    color: theme.lightColors.primary,
+    fontSize: 16,
   },
   profileSection: {
     alignItems: "center",
-    marginTop: 10,
+    paddingVertical: 20,
   },
   profileImage: {
     width: 100,
     height: 100,
     borderRadius: 50,
+    marginBottom: 12,
+  },
+  profileImagePlaceholder: {
+    backgroundColor: theme.lightColors.accent,
   },
   name: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginTop: 10,
-    color: theme.colors.pissionYellow,
+    fontSize: 24,
+    fontWeight: "600",
+    marginBottom: 4,
+    color: theme.lightColors.text,
   },
   location: {
-    fontSize: 14,
-    color: theme.colors.pissionYellow,
+    fontSize: 16,
+    color: theme.lightColors.text,
+    opacity: 0.6,
+    marginBottom: 20,
   },
   toggleContainer: {
     flexDirection: "row",
-    justifyContent: "center",
-    backgroundColor: theme.colors.pissionYellow,
-    borderRadius: 20,
-    marginHorizontal: 20,
-    padding: 5,
-    marginTop: 20,
+    paddingHorizontal: 16,
+    marginBottom: 16,
   },
   toggleButton: {
     flex: 1,
+    paddingVertical: 8,
     alignItems: "center",
-    paddingVertical: 10,
-    borderRadius: 15,
-  },
-  activeToggle: {
-    backgroundColor: "white",
   },
   toggleText: {
-    fontSize: 14,
-    fontWeight: "500",
     color: "#000",
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  activeToggle: {
+    borderBottomWidth: 2,
+    borderBottomColor: theme.lightColors.primary,
   },
   activeToggleText: {
-    color: "black",
+    color: theme.lightColors.primary,
+    fontWeight: "600",
+  },
+  list: {
+    flex: 1,
   },
   listItem: {
-    marginTop: 30,
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
-    padding: 15,
-    backgroundColor: theme.colors.pissionYellow,
-    marginHorizontal: 20,
-    marginVertical: 5,
-    borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 3,
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: `${theme.lightColors.accent}20`,
   },
   listItemText: {
     fontSize: 16,
+    color: theme.lightColors.text,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  text: {
+  arrow: {
     fontSize: 16,
-    color: "gray",
+    color: theme.lightColors.text,
+    opacity: 0.6,
+  },
+  loader: {
+    flex: 1,
   },
 });

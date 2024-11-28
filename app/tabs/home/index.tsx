@@ -1,133 +1,350 @@
-import React, { useState } from "react";
+import 'react-native-get-random-values';
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  Image,
+  Dimensions,
+  Alert,
   TouchableOpacity,
-  FlatList,
-  SafeAreaView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
+import MapView, { Marker, Callout } from 'react-native-maps';
+import { supabase } from '@/db';
+import * as Location from 'expo-location';
+import { Ionicons } from '@expo/vector-icons';
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from "expo-router";
 
+/**
+ * Type definition for restroom data from Supabase
+ * Matches the database schema exactly
+ */
+type Restroom = {
+  id: string;           // uuid primary key
+  name: string;         // restroom name/location
+  latitude: number;     // geographical coordinates
+  longitude: number;    // geographical coordinates
+  rating: number;       // average rating (0-5)
+  review_count: number; // number of reviews
+  is_accessible: boolean; // handicap accessible
+  is_public: boolean;    // public vs private
+  created_at: string;    // timestamp of creation
+  bathroom_code?: string; // optional access code
+};
+
+/**
+ * Home Screen Component
+ * Displays a map centered on user's location with nearby restroom markers
+ * Uses default map provider for Expo Go compatibility
+ */
 export default function Home() {
-  const [activeTab, setActiveTab] = useState("saved");
+  // State Management
+  const [restrooms, setRestrooms] = useState<Restroom[]>([]);
+  const [location, setLocation] = useState<Location.LocationObject | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showPins, setShowPins] = useState(false);
+  const mapRef = useRef<MapView | null>(null);
+  const searchBarRef = useRef<any>(null);
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
 
-  const savedRestrooms = ["In San Francisco", "In Palo Alto", "At Stanford"];
-  const addedRestrooms = [
-    "Restroom 1 Added",
-    "Restroom 2 Added",
-    "Restroom 3 Added",
-  ];
+  // Default map region (Stanford - fallback if location permission denied)
+  const [initialRegion, setInitialRegion] = useState({
+    latitude: 37.4275,
+    longitude: -122.1697,
+    latitudeDelta: 0.0922,
+    longitudeDelta: 0.0421,
+  });
+
+  /**
+   * Centers the map on user's current location
+   */
+  const centerOnLocation = async () => {
+    if (location?.coords) {
+      mapRef.current?.animateToRegion({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      }, 1000);
+      searchBarRef.current?.clear();
+      searchBarRef.current?.blur();
+    }
+  };
+
+  useEffect(() => {
+    // Load restrooms immediately but show them after delay
+    fetchRestrooms();
+    setTimeout(() => setShowPins(true), 500);
+
+    // Get location permission and update map
+    (async () => {
+      // Request location permission
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setErrorMsg('Permission to access location was denied');
+        Alert.alert('Permission Denied', 'Please enable location services to find restrooms near you.');
+        return;
+      }
+
+      try {
+        // Get current location
+        const currentLocation = await Location.getCurrentPositionAsync({});
+        setLocation(currentLocation);
+        
+        // Update map center to current location
+        const newRegion = {
+          latitude: currentLocation.coords.latitude,
+          longitude: currentLocation.coords.longitude,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        };
+        setInitialRegion(newRegion);
+      } catch (error) {
+        console.error('Error getting location:', error);
+        Alert.alert('Error', 'Could not get your current location.');
+      }
+    })();
+  }, []); // Run once on component mount
+
+  /**
+   * Fetch restroom data from Supabase
+   */
+  async function fetchRestrooms() {
+    try {
+      const { data, error } = await supabase
+        .from('restrooms')
+        .select('*');
+      
+      if (error) {
+        console.error('Error fetching restrooms:', error);
+        return;
+      }
+
+      if (data) {
+        setRestrooms(data);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  }
+
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={{ textAlign: "center", fontSize: 24 }}>
-        Under Construction!
-      </Text>
-    </SafeAreaView>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={styles.container}>
+        <View style={styles.mapContainer}>
+          <GooglePlacesAutocomplete
+            ref={searchBarRef}
+            placeholder='Search location...'
+            onPress={(data, details = null) => {
+              if (details?.geometry?.location) {
+                mapRef.current?.animateToRegion({
+                  latitude: details.geometry.location.lat,
+                  longitude: details.geometry.location.lng,
+                  latitudeDelta: 0.01,
+                  longitudeDelta: 0.01,
+                }, 1000);
+              }
+            }}
+            textInputProps={{
+              leftIcon: { type: 'ionicon', name: 'search-outline' }
+            }}
+            styles={{
+              container: [
+                styles.searchBarContainer,
+                {
+                  top: insets.top + 10,
+                  position: 'relative',
+                  maxHeight: '80%',
+                },
+              ],
+              textInput: [
+                styles.searchBarInput,
+                {
+                  opacity: 1,
+                  fontWeight: '400',
+                  paddingLeft: 35,
+                  color: '#000000',
+                }
+              ],
+              listView: [
+                styles.searchResults,
+                {
+                  maxHeight: 200,
+                  position: 'relative',
+                }
+              ],
+              row: [
+                styles.searchRow,
+                {
+                  minHeight: 50,
+                }
+              ],
+              description: { fontWeight: '400' },
+            }}
+            query={{
+              key: 'INPUT AND DELETE BEFORE PUSHING', // CHECK TEXTS AND INPUT THIS
+              language: 'en',
+            }}
+            fetchDetails={true}
+            enablePoweredByContainer={false}
+            renderLeftButton={() => (
+              <View style={{
+                position: 'absolute',
+                left: 10,
+                top: 12,
+                zIndex: 1,
+              }}>
+                <Ionicons name="search-outline" size={20} color="#333333" />
+              </View>
+            )}
+          />
+          <MapView
+            ref={mapRef}
+            style={styles.map}
+            initialRegion={initialRegion}
+            showsUserLocation={true}
+          >
+            {showPins && restrooms.map((restroom) => (
+              <Marker
+                key={restroom.id}
+                coordinate={{
+                  latitude: restroom.latitude,
+                  longitude: restroom.longitude,
+                }}
+              >
+                <Callout 
+                  onPress={() => router.push(`/tabs/profile/restroom?id=${restroom.id}`)}
+                  style={styles.callout}
+                >
+                  <View>
+                    <View style={styles.calloutHeader}>
+                      <Text style={styles.calloutTitle} numberOfLines={1}>{restroom.name}</Text>
+                      <View style={styles.ratingContainer}>
+                        <Ionicons name="star" size={14} color="#FFD700" />
+                        <Text style={styles.rating}>({restroom.rating})</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.moreInfoButton}>More Info →</Text>
+                  </View>
+                </Callout>
+              </Marker>
+            ))}
+          </MapView>
+          <TouchableOpacity 
+            style={styles.locationButton}
+            onPress={centerOnLocation}
+          >
+            <Ionicons name="locate" size={24} color="#007AFF" />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </TouchableWithoutFeedback>
   );
 }
 
+/**
+ * Component Styles
+ */
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffff",
   },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    padding: 15,
-  },
-  backButton: {
-    fontSize: 18,
-    color: "black",
-  },
-  logoutButton: {
-    backgroundColor: "#f5f5f5",
-    paddingVertical: 5,
-    paddingHorizontal: 15,
-    borderRadius: 10,
-    marginTop: 20,
-  },
-  logoutText: {
-    fontSize: 12,
-    color: "#333",
-  },
-  profileSection: {
-    alignItems: "center",
-    marginTop: 10,
-  },
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-  },
-  name: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginTop: 10,
-  },
-  location: {
-    fontSize: 14,
-    color: "gray",
-  },
-  toggleContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    backgroundColor: "#F5F5F5",
-    borderRadius: 20,
-    marginHorizontal: 20,
-    padding: 5,
-    marginTop: 20,
-  },
-  toggleButton: {
+  mapContainer: {
     flex: 1,
-    alignItems: "center",
-    paddingVertical: 10,
-    borderRadius: 15,
   },
-  activeToggle: {
-    backgroundColor: "#007AFF",
+  map: {
+    ...StyleSheet.absoluteFillObject,
   },
-  toggleText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#000",
-  },
-  activeToggleText: {
-    color: "#FFF",
-  },
-  listItem: {
-    marginTop: 30,
-    flexDirection: "row",
-    justifyContent: "space-between",
+  locationButton: {
+    position: 'absolute',
+    bottom: 30,
+    right: 30,
+    backgroundColor: 'white',
     padding: 15,
-    backgroundColor: "#f8f8f8",
-    marginHorizontal: 20,
-    marginVertical: 5,
+    borderRadius: 30,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  searchBarContainer: {
+    position: 'absolute',
+    width: '90%',
+    alignSelf: 'center',
+    zIndex: 1,
+  },
+  searchBarInput: {
+    height: 48,
+    color: '#000000',
+    fontSize: 16,
+    backgroundColor: '#fff',
+    borderRadius: 25,
+    paddingHorizontal: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  searchResults: {
+    backgroundColor: '#fff',
+    marginTop: 5,
     borderRadius: 10,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 3,
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
-  listItemText: {
-    fontSize: 16,
+  searchRow: {
+    padding: 13,
+    height: 44,
+    flexDirection: 'row',
   },
-  arrow: {
-    fontSize: 18,
-    color: "gray",
+  callout: {
+    width: 200,
+    padding: 4,
+    paddingRight: 8,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 10,
+  calloutHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
   },
-  text: {
-    fontSize: 16,
-    color: "gray",
+  calloutTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    flex: 1,
+    marginRight: 8,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  rating: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 2,
+  },
+  moreInfoButton: {
+    fontSize: 14,
+    color: '#007AFF',
+    fontWeight: '600',
+    textAlign: 'right',
   },
 });

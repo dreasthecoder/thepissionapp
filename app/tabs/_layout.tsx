@@ -2,18 +2,22 @@ import { Tabs } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Text, View } from "react-native";
 import theme from "@/assets/theme";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+  
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: theme.colors.pissionYellow,
-        tabBarInactiveTintColor: "#ccc",
+        tabBarActiveTintColor: theme.lightColors.primary,
+        tabBarInactiveTintColor: "#666",
         tabBarStyle: {
-          backgroundColor: theme.colors.black,
+          backgroundColor: theme.lightColors.background,
           borderTopWidth: 1,
-          borderColor: theme.colors.pissionYellow,
+          borderColor: '#e0e0e0',
+          height: 40 + insets.bottom,
         },
       }}
     >
@@ -27,7 +31,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="add/index"
+        name="add"
         options={{
           title: "Add",
           tabBarIcon: ({ size, color }) => (
