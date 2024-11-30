@@ -43,6 +43,7 @@ export default function AddDetails() {
   const { latitude, longitude } = useLocalSearchParams();
   const [name, setName] = useState('');
   const [bathroomCode, setBathroomCode] = useState('');
+  const [isGendered, setIsGendered] = useState(false);
   const [isPublic, setIsPublic] = useState(true);
   const [isAccessible, setIsAccessible] = useState(false);
   const [rating, setRating] = useState(0);
@@ -72,6 +73,7 @@ export default function AddDetails() {
             latitude: Number(latitude),
             longitude: Number(longitude),
             bathroom_code: bathroomCode.trim() || null,
+            is_gendered: isGendered,
             is_public: isPublic,
             is_accessible: isAccessible,
             rating: rating,
@@ -132,6 +134,13 @@ export default function AddDetails() {
 
         <Text style={styles.label}>Rating *</Text>
         <StarRating rating={rating} onRatingChange={setRating} />
+
+        <Text style={styles.label}>Gendered</Text>
+        <Switch
+          value={isGendered}
+          onValueChange={setIsGendered}
+          trackColor={{ false: "#767577", true: "#007AFF" }}
+        />
 
         <Text style={styles.label}>Wheelchair Accessible</Text>
         <Switch
