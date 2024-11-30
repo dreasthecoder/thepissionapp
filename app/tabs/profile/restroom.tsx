@@ -287,7 +287,9 @@ export default function RestroomPage() {
                 longitude: restroom.longitude,
               }}
               title={restroom.name}
-            />
+            >
+              <Image source={require('@/assets/images/toilet-pin.jpg')} style={{ height: 30, width: 30 }} resizeMode="contain" />
+            </Marker>
           </MapView>
           <Pressable 
             style={styles.directionsButton}
