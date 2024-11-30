@@ -29,6 +29,7 @@ interface Review {
   rating: number;
   text: string;
   created_at: string;
+  device_name: string;
 }
 
 interface Restroom {
@@ -36,10 +37,10 @@ interface Restroom {
   name: string;
   latitude: number;
   longitude: number;
-  gender_neutral: boolean;
-  accessible: boolean;
-  is_private: boolean;
-  access_code?: string;
+  is_gendered: boolean; // not in supabase
+  is_accessible: boolean;
+  is_public: boolean;
+  bathroom_code?: string;
   created_at: string;
 }
 
@@ -296,10 +297,10 @@ export default function RestroomPage() {
       <View style={styles.infoContainer}>
         <Text style={styles.infoText} numberOfLines={1}>
           {distance?.replace('miles away', 'mi')} • {' '}
-          {restroom?.gender_neutral ? 'Gender Neutral' : 'Gendered'} • {' '}
-          {restroom?.accessible ? 'Accessible' : 'Not Accessible'} • {' '}
-          {restroom?.is_private ? 'Private' : 'Public'}
-          {restroom?.access_code ? ` • Code: ${restroom.access_code}` : ''}
+          {restroom?.is_gendered ? 'Gendered' : 'Gender Neutral'} • {' '}
+          {restroom?.is_accessible ? 'Accessible' : 'Not Accessible'} • {' '}
+          {restroom?.is_public ? 'Public' : 'Private'}
+          {restroom?.bathroom_code ? ` • Code: ${restroom.bathroom_code}` : ''}
         </Text>
       </View>
 
@@ -318,10 +319,18 @@ export default function RestroomPage() {
           {reviews.map((review) => (
             <View key={review.id} style={styles.reviewCard}>
               <View style={styles.reviewHeader}>
-                <View style={styles.stars}>
-                  {[...Array(review.rating)].map((_, i) => (
-                    <FontAwesome key={i} name="star" size={16} color="#FFD700" />
-                  ))}
+                <View style={styles.starsAndName}>
+                  <View style={styles.stars}>
+                    {[...Array(5)].map((_, i) => (
+                      <FontAwesome
+                        key={i}
+                        name="star"
+                        size={16}
+                        color={i < review.rating ? "#FFD700" : "#DDD"}
+                      />
+                    ))}
+                  </View>
+                  <Text style={styles.reviewerName}>{review.device_name}</Text>
                 </View>
                 <Text style={styles.reviewDate}>{formatTimeAgo(review.created_at)}</Text>
               </View>
@@ -472,9 +481,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
-  stars: {
+  reviewerName: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginLeft: 4,
+  },
+  starsAndName: {
     flexDirection: 'row',
-    gap: 4,
+    alignItems: 'center',
+  },
+  stars: {
+    width: 80, 
+    flexDirection: 'row',
   },
   reviewDate: {
     color: '#666',
