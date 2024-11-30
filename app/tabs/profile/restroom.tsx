@@ -248,10 +248,14 @@ export default function RestroomPage() {
           </Pressable>
           <Text style={styles.title}>{restroom?.name}</Text>
           <Pressable 
-            style={[styles.saveButton, savedStatus.isSaved ? styles.savedButton : styles.unsavedButton]}
+            style={styles.saveButton}
             onPress={toggleSave}
           >
-            <FontAwesome name={savedStatus.isSaved ? "bookmark" : "bookmark-o"} size={20} color="#fff" />
+            <FontAwesome 
+              name={savedStatus.isSaved ? "bookmark" : "bookmark-o"} 
+              size={25} 
+              color={savedStatus.isSaved ? "#007BFF" : "#666"}
+            />
           </Pressable>
         </View>
         <View style={styles.ratingContainer}>
@@ -374,12 +378,6 @@ const styles = StyleSheet.create({
     padding: 4,
     width: 28,
     marginLeft: 8,
-  },
-  savedButton: {
-    backgroundColor: theme.lightColors.primary,
-  },
-  unsavedButton: {
-    backgroundColor: '#ccc',
   },
   ratingContainer: {
     flexDirection: 'row',
