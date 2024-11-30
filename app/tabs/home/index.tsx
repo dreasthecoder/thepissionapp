@@ -10,6 +10,7 @@ import {
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
+  Image,
 } from "react-native";
 import MapView, { Marker, Callout } from 'react-native-maps';
 import { supabase } from '@/db';
@@ -187,7 +188,7 @@ export default function Home() {
               description: { fontWeight: '400' },
             }}
             query={{
-              key: 'INPUT AND DELETE BEFORE PUSHING', // CHECK TEXTS AND INPUT THIS
+              key: 'REPLACE', // CHECK TEXTS AND INPUT THIS
               language: 'en',
             }}
             fetchDetails={true}
@@ -216,7 +217,8 @@ export default function Home() {
                   latitude: restroom.latitude,
                   longitude: restroom.longitude,
                 }}
-              >
+                >
+                <Image source={require('@/assets/images/toilet-pin.jpg')} style={{height: 25, width: 25 }} resizeMode="contain"/>
                 <Callout 
                   onPress={() => router.push(`/tabs/profile/restroom?id=${restroom.id}`)}
                   style={styles.callout}
