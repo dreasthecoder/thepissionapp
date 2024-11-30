@@ -37,7 +37,6 @@ interface Restroom {
   name: string;
   latitude: number;
   longitude: number;
-  is_gendered: boolean; // not in supabase
   is_accessible: boolean;
   is_public: boolean;
   bathroom_code?: string;
@@ -303,7 +302,6 @@ export default function RestroomPage() {
       <View style={styles.infoContainer}>
         <Text style={styles.infoText} numberOfLines={1}>
           {distance?.replace('miles away', 'mi')} • {' '}
-          {restroom?.is_gendered ? 'Gendered' : 'Gender Neutral'} • {' '}
           {restroom?.is_accessible ? 'Accessible' : 'Not Accessible'} • {' '}
           {restroom?.is_public ? 'Public' : 'Private'}
           {restroom?.bathroom_code ? ` • Code: ${restroom.bathroom_code}` : ''}
