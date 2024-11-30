@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { supabase } from '@/db';
 import theme from '@/assets/theme';
+import { getDeviceId } from '@/app/utils/device';
 
 export default function ReviewScreen() {
   const router = useRouter();
@@ -53,11 +54,24 @@ export default function ReviewScreen() {
     setSubmitting(true);
 
     try {
+      const deviceID = await getDeviceId();
+      const { data: deviceProfile, error: profileError } = await supabase
+        .from('device_profiles')
+        .select('name')
+        .eq('id', deviceID)
+        .single();
+
+      if (profileError) throw profileError;
+
+      const deviceName = deviceProfile?.name || 'Unknown';
+
       const { error } = await supabase.from('reviews').insert([
         {
           restroom_id: id,
           rating,
           text: review.trim(),
+          device_id: deviceID,
+          device_name: deviceName,
         },
       ]);
 

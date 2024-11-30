@@ -4,7 +4,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
-  Text
+  Text,
+  Image
 } from "react-native";
 import MapView, { Marker, MapPressEvent, Region } from 'react-native-maps';
 import { router } from 'expo-router';
@@ -122,7 +123,7 @@ export default function Add() {
             description: { fontWeight: 'bold' },
           }}
           query={{
-            key: 'INPUT AND DELETE BEFORE PUSHING', // CHECK TEXTS AND INPUT THIS
+            key: 'REPLACE THIS', // CHECK TEXTS AND INPUT THIS
             language: 'en',
           }}
           fetchDetails={true}
@@ -149,8 +150,9 @@ export default function Add() {
           {selectedLocation && (
             <Marker
               coordinate={selectedLocation}
-              pinColor="#007AFF"
-            />
+            >
+              <Image source={require('@/assets/images/toilet-pin.jpg')} style={{ height: 30, width: 30 }} resizeMode="contain" />
+            </Marker>
           )}
         </MapView>
         <TouchableOpacity 
