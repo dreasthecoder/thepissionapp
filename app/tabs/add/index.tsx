@@ -123,7 +123,7 @@ export default function Add() {
             description: { fontWeight: 'bold' },
           }}
           query={{
-            key: 'AIzaSyCVkNkyWaCYNf84DSApdTVWaroCSeE9fe8', // CHECK TEXTS AND INPUT THIS
+            key: 'REPLACE THIS', // CHECK TEXTS AND INPUT THIS
             language: 'en',
           }}
           fetchDetails={true}
