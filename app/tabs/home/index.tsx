@@ -237,7 +237,7 @@ export default function Home() {
                   />
                   <Callout
                     onPress={() =>
-                      router.push(`/tabs/profile/restroom?id=${restroom.id}`)
+                      router.push(`../../components/restroom?id=${restroom.id}`)
                     }
                     style={styles.callout}
                   >
