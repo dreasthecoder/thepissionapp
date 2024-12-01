@@ -49,7 +49,7 @@ export default function Home() {
     null
   );
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [showPins, setShowPins] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const mapRef = useRef<MapView | null>(null);
   const searchBarRef = useRef<any>(null);
   const insets = useSafeAreaInsets();
@@ -79,14 +79,11 @@ export default function Home() {
       );
       searchBarRef.current?.clear();
       searchBarRef.current?.blur();
+      fetchRestrooms(); // Fetch restrooms when centering on location
     }
   };
 
   useEffect(() => {
-    // Load restrooms immediately but show them after delay
-    fetchRestrooms();
-    setTimeout(() => setShowPins(true), 500);
-
     // Get location permission and update map
     (async () => {
       // Request location permission
@@ -113,6 +110,7 @@ export default function Home() {
           longitudeDelta: 0.0421,
         };
         setInitialRegion(newRegion);
+        fetchRestrooms(); // Fetch restrooms after getting location
       } catch (error) {
         console.error("Error getting location:", error);
         Alert.alert("Error", "Could not get your current location.");
@@ -124,7 +122,10 @@ export default function Home() {
    * Fetch restroom data from Supabase
    */
   async function fetchRestrooms() {
+    if (isLoading) return;
+    
     try {
+      setIsLoading(true);
       const { data, error } = await supabase.from("restrooms").select("*");
 
       if (error) {
@@ -137,8 +138,14 @@ export default function Home() {
       }
     } catch (error) {
       console.error("Error:", error);
+    } finally {
+      setIsLoading(false);
     }
   }
+
+  const onRegionChangeComplete = () => {
+    fetchRestrooms();
+  };
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -219,43 +226,42 @@ export default function Home() {
             ref={mapRef}
             style={styles.map}
             initialRegion={initialRegion}
-            showsUserLocation={true}
+            showsUserLocation
+            showsMyLocationButton={false}
+            onRegionChangeComplete={onRegionChangeComplete}
           >
-            {showPins &&
-              restrooms.map((restroom) => (
-                <Marker
-                  key={restroom.id}
-                  coordinate={{
-                    latitude: restroom.latitude,
-                    longitude: restroom.longitude,
-                  }}
+            {restrooms.map((restroom) => (
+              <Marker
+                key={restroom.id}
+                coordinate={{
+                  latitude: restroom.latitude,
+                  longitude: restroom.longitude,
+                }}
+                onCalloutPress={() => router.push(`/${restroom.id}`)}
+              >
+                <Image
+                  source={require("@/assets/images/toilet-pin.jpg")}
+                  style={{ height: 25, width: 25 }}
+                  resizeMode="contain"
+                />
+                <Callout
+                  style={styles.callout}
                 >
-                  <Image
-                    source={require("@/assets/images/toilet-pin.jpg")}
-                    style={{ height: 25, width: 25 }}
-                    resizeMode="contain"
-                  />
-                  <Callout
-                    onPress={() =>
-                      router.push(`../../components/restroom?id=${restroom.id}`)
-                    }
-                    style={styles.callout}
-                  >
-                    <View>
-                      <View style={styles.calloutHeader}>
-                        <Text style={styles.calloutTitle} numberOfLines={1}>
-                          {restroom.name}
-                        </Text>
-                        <View style={styles.ratingContainer}>
-                          <Ionicons name="star" size={14} color="#FFD700" />
-                          <Text style={styles.rating}>({restroom.rating})</Text>
-                        </View>
+                  <View>
+                    <View style={styles.calloutHeader}>
+                      <Text style={styles.calloutTitle} numberOfLines={1}>
+                        {restroom.name}
+                      </Text>
+                      <View style={styles.ratingContainer}>
+                        <Ionicons name="star" size={14} color="#FFD700" />
+                        <Text style={styles.rating}>({restroom.rating})</Text>
                       </View>
-                      <Text style={styles.moreInfoButton}>More Info →</Text>
                     </View>
-                  </Callout>
-                </Marker>
-              ))}
+                    <Text style={styles.moreInfoButton}>More Info →</Text>
+                  </View>
+                </Callout>
+              </Marker>
+            ))}
           </MapView>
           <TouchableOpacity
             style={styles.locationButton}

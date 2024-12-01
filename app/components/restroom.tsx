@@ -51,13 +51,21 @@ interface SavedStatus {
 
 export default function RestroomPage() {
   const router = useRouter();
-  const { id } = useLocalSearchParams();
+  const { id, source } = useLocalSearchParams();
   const [restroom, setRestroom] = useState<Restroom | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [distance, setDistance] = useState<string>('');
   const [averageRating, setAverageRating] = useState(0);
   const [savedStatus, setSavedStatus] = useState<SavedStatus>({ isSaved: false });
+
+  const handleBack = () => {
+    if (source === 'profile') {
+      router.replace('/tabs/profile');
+    } else {
+      router.back();
+    }
+  };
 
   useEffect(() => {
     fetchRestroomDetails();
@@ -243,7 +251,7 @@ export default function RestroomPage() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <Pressable onPress={handleBack} style={styles.backButton}>
             <FontAwesome name="arrow-left" size={20} color="#666" />
           </Pressable>
           <Text style={styles.title}>{restroom?.name}</Text>

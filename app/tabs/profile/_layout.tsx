@@ -10,7 +10,6 @@ export default function StackLayout() {
     >
       <Stack.Screen name="index" />
       <Stack.Screen name="city" />
-      <Stack.Screen name="restroom" />
       <Stack.Screen name="review" />
     </Stack>
   );

@@ -124,7 +124,7 @@ export default function Profile() {
   const renderRestroom = ({ item }: { item: Restroom }) => (
     <TouchableOpacity
       style={styles.listItem}
-      onPress={() => router.push(`/tabs/profile/restroom?id=${item.id}`)}
+      onPress={() => router.push(`/${item.id}?source=profile`)}
     >
       <Text style={styles.listItemText}>{item.name}</Text>
       <Text style={styles.arrow}>{">"}</Text>
