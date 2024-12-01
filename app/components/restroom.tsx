@@ -303,10 +303,9 @@ export default function RestroomPage() {
       <View style={styles.infoContainer}>
         <Text style={styles.infoText} numberOfLines={1}>
           {distance?.replace('miles away', 'mi')} • {' '}
-          {restroom?.is_gendered ? 'Gendered' : 'Gender Neutral'} • {' '}
+          {restroom?.is_gendered ? 'Gendered' : 'All-Gender'} • {' '}
           {restroom?.is_accessible ? 'Accessible' : 'Not Accessible'} • {' '}
-          {restroom?.is_public ? 'Public' : 'Private'}
-          {restroom?.bathroom_code ? ` • Code: ${restroom.bathroom_code}` : ''}
+          {restroom?.is_public ? 'Public' : `Private${restroom?.bathroom_code ? ` (${restroom.bathroom_code})` : ''}`}
         </Text>
       </View>
 
